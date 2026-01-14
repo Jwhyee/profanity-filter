@@ -10,7 +10,7 @@ import java.util.concurrent.ConcurrentHashMap
  * 생성 비용이 높으므로 인스턴스를 하나만 생성하여 재사용(Singleton)하는 것을 권장합니다.
  */
 class ProfanityValidator(
-    private val banTrie: PayloadTrie<Profanity>,
+    private val trie: PayloadTrie<Profanity>,
     private val allowWords: Set<String> = emptySet(),
 ) {
     private val allowTrieCache = ConcurrentHashMap<Set<ProfanityFilterRegex>, PayloadTrie<String>>()
@@ -28,7 +28,7 @@ class ProfanityValidator(
         val filtered = applyPolicies(sentence, defaultPolicies)
 
         // 2. 일차 탐지
-        val detectedBans = banTrie.parseText(filtered)
+        val detectedBans = trie.parseText(filtered)
         if (detectedBans.isEmpty()) return
 
         // 3. 허용 단어(WhiteList) 제외 처리

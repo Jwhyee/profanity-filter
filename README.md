@@ -2,7 +2,7 @@
 
 > 비속어, 인격 모독 등에 대한 단어가 포함된 리포지토리입니다. 코드를 읽으실 때, 이 점 양해해주시면 감사하겠습니다.
 
-Aho-Corasick 알고리즘 기반의 비속어 필터링 라이브러리입니다. 
+Aho-Corasick(아호-코라식) 알고리즘 기반의 비속어 필터링 라이브러리입니다. 
 숫자나 공백을 섞은 변칙 욕설 탐지와 정교한 허용 단어 예외 처리를 지원합니다. 우아한형제들 기술 블로그의 [비속어 탐지 전략](https://techblog.woowahan.com/15764/)을 참고하여 설계되었습니다.
 
 ## 주요 기능
@@ -12,202 +12,11 @@ Aho-Corasick 알고리즘 기반의 비속어 필터링 라이브러리입니다
 - **지능형 예외 처리**: "시발점"과 같이 비속어가 포함된 정상 단어를 구간 중첩 알고리즘으로 제외
 - **Trie 빌드 캐싱**: 정책 조합별로 허용 단어 트리를 캐싱하여 실시간 성능 보장
 
-## 설치 방법
+## 🚀 Quick Start
 
-### Gradle (Kotlin DSL)
+- [Quick start document](./doc/QUICK_START.md)
 
-**settings.gradle.kts**
-```kotlin
-dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-    repositories {
-        mavenCentral()
-        maven { url = uri("https://jitpack.io") }
-    }
-}
-```
-
-**build.gradle.kts**
-```kotlin
-dependencies {
-    implementation("com.github.Jwhyee:profanity-filter:1.0.0")
-}
-```
-
-### Gradle (Groovy)
-
-**settings.gradle**
-```groovy
-dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-    repositories {
-        mavenCentral()
-        maven { url 'https://jitpack.io' }
-    }
-}
-```
-
-**build.gradle**
-```groovy
-dependencies {
-    implementation 'com.github.Jwhyee:profanity-filter:1.0.0'
-}
-```
-
-### Maven
-
-**pom.xml**
-```xml
-<repositories>
-    <repository>
-        <id>jitpack.io</id>
-        <url>https://jitpack.io</url>
-    </repository>
-</repositories>
-
-<dependencies>
-    <dependency>
-        <groupId>com.github.Jwhyee</groupId>
-        <artifactId>profanity-filter</artifactId>
-        <version>1.0.0</version>
-    </dependency>
-</dependencies>
-```
-
-## 설치 이슈
-
-### Maven Repository 충돌
-
-```
-Build was configured to prefer settings repositories over project repositories
-```
-
-**해결 방법**: `build.gradle(.kts)`의 `repositories` 블록을 제거하고 `settings.gradle(.kts)`에만 유지하세요.
-
-### Dependency 충돌
-
-이 라이브러리는 내부적으로 `ahocorasick` 의존성을 포함합니다. 프로젝트에서 직접 추가한 `ahocorasick` 의존성이 있다면 제거해주세요.
-
-## 사용 예시
-
-### Kotlin
-
-**Spring Configuration**
-```kotlin
-@Configuration
-class FilterConfig {
-    @Bean
-    fun profanityValidator(): ProfanityValidator {
-        val banTrie = ProfanityTrie.create(
-            customWords = listOf("추가할 비속어"),
-            excludeWords = listOf("제외할 비속어")
-        )
-        
-        return ProfanityValidator(banTrie, setOf("시발점"))
-    }
-}
-```
-
-```kotlin
-@Service
-class FilterService(
-    private val profanityValidator: ProfanityValidator
-) {
-    fun check(keyword: String) {
-        try {
-            validator.validate(keyword)
-        } catch (e: ProfanityDetectedException) {
-            ...
-        }
-    }
-}
-```
-
-**POJO**
-```kotlin
-class MyService {
-    private val validator = ProfanityValidator(
-        ProfanityTrie.create(),
-        setOf("시발점")
-    )
-
-    fun check(text: String) {
-        try {
-            validator.validate(text)
-        } catch (e: ProfanityDetectedException) {
-            ...
-        }
-    }
-}
-```
-
-### Java
-
-**Spring Configuration**
-```java
-import io.github.jwhyee.profanity.helper.ProfanityTrie;
-import io.github.jwhyee.profanity.validator.ProfanityValidator;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import java.util.Set;
-
-@Configuration
-public class FilterConfig {
-    @Bean
-    public ProfanityValidator profanityValidator() {
-        var trie = ProfanityTrie.create(
-            List.of("추가할 비속어"),
-            List.of("제외할 비속어")
-        );
-        
-        return new ProfanityValidator(trie, Set.of("시발점"));
-    }
-}
-```
-
-```java
-@Service
-public class FilterService {
-    private final ProfanityValidator validator;
-
-    public MyService(ProfanityValidator validator) {
-        this.validator = validator;
-    }
-    
-    public void check(String keyword) {
-        try {
-            validator.validate(keyword);
-        } catch (ProfanityDetectedException e) {
-            System.out.println(e);
-        }
-    }
-}
-```
-
-**POJO**
-```java
-import io.github.jwhyee.profanity.helper.ProfanityTrie;
-import io.github.jwhyee.profanity.validator.ProfanityValidator;
-import io.github.jwhyee.profanity.validator.ProfanityDetectedException;
-import java.util.Set;
-
-public class MyService {
-    private static final ProfanityValidator VALIDATOR = new ProfanityValidator(
-        ProfanityTrie.create(),
-        Set.of("시발점")
-    );
-
-    public void check(String text) {
-        try {
-            VALIDATOR.validate(text);
-        } catch (ProfanityDetectedException e) {
-            System.out.println("감지된 비속어: " + e.getDetectedWords());
-        }
-    }
-}
-```
-
-## 동작 원리
+## 🛠️ 동작 원리
 
 ### 탐지 알고리즘
 
@@ -215,10 +24,6 @@ public class MyService {
 2. **금칙어 탐지**: Aho-Corasick 알고리즘으로 비속어 구간 탐색
 3. **허용 단어 탐지**: 동일한 정책을 적용한 허용 단어 트리로 예외 구간 탐색
 4. **구간 교집합 판단**: 금칙어 구간이 허용 단어 구간과 겹치면 제외
-
-### 캐싱 전략
-
-`Set<ProfanityFilterRegex>`를 키로 사용하여 동일한 정규화 정책 조합에 대해 빌드된 Trie를 재사용합니다. 이를 통해 무거운 빌드 과정을 반복하지 않고 실시간 성능을 보장합니다.
 
 ### 전처리 정책
 
