@@ -13,21 +13,95 @@
 
 ---
 
-## 🚀 시작하기
+## 🚀 Quick Start
 
-### 1. 의존성 추가 (Gradle)
+### 1. Jitpack 의존성 추가
 
-JitPack 등을 통해 배포된 라이브러리를 추가하거나 로컬에 빌드하여 사용할 수 있습니다.
+사용 중인 빌드 도구에 맞춰 저장소와 의존성을 추가하세요. 이미 Jitpack이 있는 경우 2번으로 넘어가주세요.
+
+<details>
+<summary><b>Gradle (Kotlin DSL - settings.gradle.kts)</b></summary>
+
+1. `settings.gradle.kts` 파일 끝에 JitPack 저장소를 추가합니다.
 
 ```kotlin
-// build.gradle.kts
-dependencies {
-    // 라이브러리 하나만 추가하면 ahocorasick 의존성까지 자동으로 포함됩니다.
-    implementation("io.github.jwhyee:profanity-filter:1.0.0")
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        mavenCentral()
+        maven { url = uri("https://jitpack.io") }
+    }
 }
+
 ```
 
-만약 의존성 충돌 이슈가 발생할 경우, 직접 추가한 `ahocorasick`을 제거하고, 다시 시도해주세요.
+2. `build.gradle.kts`에 의존성을 추가합니다.
+
+```kotlin
+dependencies {
+    implementation("com.github.Jwhyee:profanity-filter:1.0.0")
+}
+
+```
+
+</details>
+
+<details>
+<summary><b>Gradle (Groovy - settings.gradle)</b></summary>
+
+1. `settings.gradle` 파일 끝에 JitPack 저장소를 추가합니다.
+
+```groovy
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        mavenCentral()
+        maven { url 'https://jitpack.io' }
+    }
+}
+
+```
+
+2. `build.gradle`에 의존성을 추가합니다.
+
+```groovy
+dependencies {
+    implementation 'com.github.Jwhyee:profanity-filter:1.0.0'
+}
+
+```
+
+</details>
+
+<details>
+<summary><b>Maven (pom.xml)</b></summary>
+
+1. `pom.xml`에 JitPack 저장소를 추가합니다.
+
+```xml
+<repositories>
+    <repository>
+        <id>jitpack.io</id>
+        <url>https://jitpack.io</url>
+    </repository>
+</repositories>
+
+```
+
+2. 의존성을 추가합니다.
+
+```xml
+<dependency>
+    <groupId>com.github.Jwhyee</groupId>
+    <artifactId>profanity-filter</artifactId>
+    <version>1.0.0</version>
+</dependency>
+
+```
+
+</details>
+
+라이브러리 하나만 추가하면 ahocorasick 의존성까지 자동으로 포함됩니다. 만약 의존성 충돌 이슈가 발생할 경우, 직접 추가한 `ahocorasick`을 제거하고, 다시 시도해주세요.
 
 ### 2. 사용 예시
 
