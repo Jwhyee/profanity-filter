@@ -94,11 +94,6 @@ Build was configured to prefer settings repositories over project repositories
 
 **Spring Configuration**
 ```kotlin
-import io.github.jwhyee.profanity.helper.ProfanityTrie
-import io.github.jwhyee.profanity.validator.ProfanityValidator
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-
 @Configuration
 class FilterConfig {
     @Bean
@@ -113,12 +108,23 @@ class FilterConfig {
 }
 ```
 
+```kotlin
+@Service
+class FilterService(
+    private val profanityValidator: ProfanityValidator
+) {
+    fun check(keyword: String) {
+        try {
+            validator.validate(keyword)
+        } catch (e: ProfanityDetectedException) {
+            ...
+        }
+    }
+}
+```
+
 **POJO**
 ```kotlin
-import io.github.jwhyee.profanity.helper.ProfanityTrie
-import io.github.jwhyee.profanity.validator.ProfanityValidator
-import io.github.jwhyee.profanity.validator.ProfanityDetectedException
-
 class MyService {
     private val validator = ProfanityValidator(
         ProfanityTrie.create(),
@@ -129,7 +135,7 @@ class MyService {
         try {
             validator.validate(text)
         } catch (e: ProfanityDetectedException) {
-            println("감지된 비속어: ${e.detectedWords}")
+            ...
         }
     }
 }
@@ -149,12 +155,31 @@ import java.util.Set;
 public class FilterConfig {
     @Bean
     public ProfanityValidator profanityValidator() {
-        var banTrie = ProfanityTrie.create(
+        var trie = ProfanityTrie.create(
             List.of("추가할 비속어"),
             List.of("제외할 비속어")
         );
         
-        return new ProfanityValidator(banTrie, Set.of("시발점"));
+        return new ProfanityValidator(trie, Set.of("시발점"));
+    }
+}
+```
+
+```java
+@Service
+public class FilterService {
+    private final ProfanityValidator validator;
+
+    public MyService(ProfanityValidator validator) {
+        this.validator = validator;
+    }
+    
+    public void check(String keyword) {
+        try {
+            validator.validate(keyword);
+        } catch (ProfanityDetectedException e) {
+            System.out.println(e);
+        }
     }
 }
 ```
