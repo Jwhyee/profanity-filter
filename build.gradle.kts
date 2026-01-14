@@ -10,6 +10,7 @@ repositories {
 }
 
 dependencies {
+    implementation("org.ahocorasick:ahocorasick:0.6.3")
     testImplementation(kotlin("test"))
 }
 
