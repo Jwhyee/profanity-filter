@@ -90,8 +90,9 @@ Build was configured to prefer settings repositories over project repositories
 
 ## 사용 예시
 
-### Kotlin (Spring Configuration)
+### Kotlin
 
+**Spring Configuration**
 ```kotlin
 import io.github.jwhyee.profanity.helper.ProfanityTrie
 import io.github.jwhyee.profanity.validator.ProfanityValidator
@@ -112,12 +113,58 @@ class FilterConfig {
 }
 ```
 
+**POJO**
+```kotlin
+import io.github.jwhyee.profanity.helper.ProfanityTrie
+import io.github.jwhyee.profanity.validator.ProfanityValidator
+import io.github.jwhyee.profanity.validator.ProfanityDetectedException
+
+class MyService {
+    private val validator = ProfanityValidator(
+        ProfanityTrie.create(),
+        setOf("시발점")
+    )
+
+    fun check(text: String) {
+        try {
+            validator.validate(text)
+        } catch (e: ProfanityDetectedException) {
+            println("감지된 비속어: ${e.detectedWords}")
+        }
+    }
+}
+```
+
 ### Java
 
+**Spring Configuration**
+```java
+import io.github.jwhyee.profanity.helper.ProfanityTrie;
+import io.github.jwhyee.profanity.validator.ProfanityValidator;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import java.util.Set;
+
+@Configuration
+public class FilterConfig {
+    @Bean
+    public ProfanityValidator profanityValidator() {
+        var banTrie = ProfanityTrie.create(
+            List.of("추가할 비속어"),
+            List.of("제외할 비속어")
+        );
+        
+        return new ProfanityValidator(banTrie, Set.of("시발점"));
+    }
+}
+```
+
+**POJO**
 ```java
 import io.github.jwhyee.profanity.helper.ProfanityTrie;
 import io.github.jwhyee.profanity.validator.ProfanityValidator;
 import io.github.jwhyee.profanity.validator.ProfanityDetectedException;
+import java.util.Set;
 
 public class MyService {
     private static final ProfanityValidator VALIDATOR = new ProfanityValidator(
