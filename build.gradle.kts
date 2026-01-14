@@ -1,17 +1,17 @@
 plugins {
-    kotlin("jvm") version "2.2.20"
+    alias(libs.plugins.kotlin.jvm)
     `maven-publish`
 }
 
 group = "io.github.jwhyee.profanity"
-version = "1.0.0"
+version = libs.versions.profanity.filter.get()
 
 repositories {
     mavenCentral()
 }
 
 dependencies {
-    api("org.ahocorasick:ahocorasick:0.6.3")
+    api(libs.ahocorasick)
     testImplementation(kotlin("test"))
 }
 

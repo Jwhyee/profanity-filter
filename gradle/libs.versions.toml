@@ -1,0 +1,13 @@
+[versions]
+# 라이브러리 및 외부 의존성 버전 관리
+profanity-filter = "1.0.0"
+ahocorasick = "0.6.3"
+kotlin = "2.2.20"
+
+[libraries]
+# 아호코라식 라이브러리
+ahocorasick = { group = "org.ahocorasick", name = "ahocorasick", version.ref = "ahocorasick" }
+
+[plugins]
+# 코틀린 플러그인
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
