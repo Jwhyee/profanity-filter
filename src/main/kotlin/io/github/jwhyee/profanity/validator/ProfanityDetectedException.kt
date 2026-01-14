@@ -1,4 +1,4 @@
-package filter.validator
+package io.github.jwhyee.profanity.validator
 
 class ProfanityDetectedException(
     detected: List<String>

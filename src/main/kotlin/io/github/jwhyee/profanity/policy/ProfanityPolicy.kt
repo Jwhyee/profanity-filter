@@ -1,6 +1,6 @@
-package filter.policy
+package io.github.jwhyee.profanity.policy
 
-import filter.dto.Profanity
+import io.github.jwhyee.profanity.dto.Profanity
 
 internal object ProfanityPolicy {
     @JvmField

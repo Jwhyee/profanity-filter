@@ -1,7 +1,7 @@
-package filter.validator
+package io.github.jwhyee.profanity.validator
 
-import filter.dto.Profanity
-import filter.policy.ProfanityFilterRegex
+import io.github.jwhyee.profanity.dto.Profanity
+import io.github.jwhyee.profanity.policy.ProfanityFilterRegex
 import org.ahocorasick.trie.PayloadTrie
 import java.util.concurrent.ConcurrentHashMap
 

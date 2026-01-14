@@ -1,26 +1,11 @@
-package filter.helper
+package io.github.jwhyee.profanity.helper
 
-import filter.dto.Profanity
-import filter.policy.ProfanityPolicy
+import io.github.jwhyee.profanity.dto.Profanity
+import io.github.jwhyee.profanity.policy.ProfanityPolicy
 import org.ahocorasick.trie.PayloadTrie
 
 /**
  * 비속어 필터링을 위한 [PayloadTrie] 생성기입니다.
- * 스프링 환경에서는 다음과 같이 빈(Bean)으로 등록하여 사용하는 것을 권장합니다.
- *
- * ```java
- * // Java Configuration Example
- * @Configuration
- * public class FilterConfig {
- *     @Bean
- *     public PayloadTrie<Profanity> profanityTrie() {
- *         return ProfanityTrie.create(
- *             List.of("추가단어"),
- *             List.of("제외단어")
- *         );
- *     }
- * }
- * ```
  */
 object ProfanityTrie {
 
