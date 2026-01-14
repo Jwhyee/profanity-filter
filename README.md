@@ -128,3 +128,9 @@ io.github.jwhyee.profanity
 
 * [우아한형제들 기술 블로그 - 고르곤졸라는 되지만 고르곤 졸라는 안 돼! 배달의민족에서 금칙어를 관리하는 방법](https://techblog.woowahan.com/15764/)
 * [Aho-Corasick Algorithm Wikipedia](https://en.wikipedia.org/wiki/Aho%E2%80%93Corasick_algorithm)
+
+---
+
+## 📄 License
+
+이 프로젝트는 **MIT License**를 따릅니다. 누구나 자유롭게 수정 및 배포가 가능하며, 기여(PR)를 환영합니다. 단, 재배포 시 저작권 고지 및 라이선스 문구를 포함해야 합니다. 자세한 내용은 [LICENSE](./LICENSE) 파일을 확인해 주세요.
