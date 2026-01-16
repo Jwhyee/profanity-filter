@@ -31,7 +31,7 @@ dependencyResolutionManagement {
 
 ```kotlin
 dependencies {
-    implementation("com.github.Jwhyee:profanity-filter:1.0.0")
+    implementation("com.github.Jwhyee:profanity-filter:1.0.2")
 }
 ```
 
@@ -53,7 +53,7 @@ dependencyResolutionManagement {
 
 ```groovy
 dependencies {
-    implementation 'com.github.Jwhyee:profanity-filter:1.0.0'
+    implementation 'com.github.Jwhyee:profanity-filter:1.0.2'
 }
 ```
 
@@ -73,7 +73,7 @@ dependencies {
     <dependency>
         <groupId>com.github.Jwhyee</groupId>
         <artifactId>profanity-filter</artifactId>
-        <version>1.0.0</version>
+        <version>1.0.2</version>
     </dependency>
 </dependencies>
 ```
