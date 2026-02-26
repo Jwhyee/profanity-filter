@@ -42,5 +42,8 @@ bin/
 ### VS Code ###
 .vscode/
 
+### AI ###
+AGENTS.md
+
 ### Mac OS ###
 .DS_Store
