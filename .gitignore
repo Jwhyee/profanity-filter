@@ -43,6 +43,7 @@ bin/
 .vscode/
 
 ### AI ###
+.sisyphus/
 AGENTS.md
 
 ### Mac OS ###
