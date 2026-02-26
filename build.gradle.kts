@@ -12,7 +12,8 @@ repositories {
 
 dependencies {
     api(libs.ahocorasick)
-    testImplementation(kotlin("test"))
+    testImplementation(libs.kotest.runner.junit5)
+    testImplementation(libs.kotest.assertions.core)
 }
 
 java {
