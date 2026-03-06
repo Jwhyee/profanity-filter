@@ -92,14 +92,20 @@ class ProfanityValidator(
         }
     }
 
+    private val isUpdating = AtomicReference<Boolean>(false)
+
     /**
-     * 내부 상태를 바탕으로 Trie를 다시 빌드하여 원자적으로 교체합니다. (CopyOnWrite 패턴)
+     * 내부 상태를 바탕으로 Trie를 다시 빌드하여 원자적으로 교체합니다.
+     * 여러 스레드에서 동시에 호출하더라도 최종적으로는 모든 단어가 포함된 Trie가 반영됩니다.
      */
     @Synchronized
     private fun rebuildTrie() {
+        val currentBanned = _customBannedWords.toList()
+        val currentExcluded = _excludedWords.toList()
+        
         val newTrie = ProfanityTrie.create(
-            customWords = _customBannedWords.toList(),
-            excludeWords = _excludedWords.toList()
+            customWords = currentBanned,
+            excludeWords = currentExcluded
         )
         trieReference.set(newTrie)
     }
