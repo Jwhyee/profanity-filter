@@ -1,11 +1,56 @@
 package io.github.jwhyee.profanity.validator
 
 import io.github.jwhyee.profanity.helper.ProfanityTrie
+import io.github.jwhyee.profanity.policy.ProfanityFilterRegex
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.StringSpec
+import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 class ProfanityValidatorTest : StringSpec({
+
+    "실시간 사전 업데이트 시 동시성 환경에서도 안전하게 동작해야 한다" {
+        val validator = ProfanityValidator(customBannedWords = listOf("멍청이"))
+        val executor = Executors.newFixedThreadPool(10)
+        val latch = CountDownLatch(20)
+
+        // 1. 읽기 스레드 (검증 및 필터링)
+        repeat(10) {
+            executor.submit {
+                try {
+                    repeat(50) {
+                        validator.filter("너 정말 멍청이구나")
+                    }
+                } finally {
+                    latch.countDown()
+                }
+            }
+        }
+
+        // 2. 쓰기 스레드 (사전 업데이트)
+        repeat(10) { i ->
+            executor.submit {
+                try {
+                    repeat(2) { j ->
+                        validator.addBannedWords("바보$i$j")
+                    }
+                } finally {
+                    latch.countDown()
+                }
+            }
+        }
+
+        latch.await(20, TimeUnit.SECONDS)
+        executor.shutdown()
+        executor.awaitTermination(5, TimeUnit.SECONDS)
+
+        // "바보00"이 정상적으로 탐지되어 마스킹되는지 확인
+        val result = validator.filter("바보00")
+        result shouldBe "****"
+    }
 
     "공백이나 숫자가 포함된 변칙 비속어를 정확하게 마스킹한다" {
         val trie = ProfanityTrie.create(customWords = listOf("시발"))
