@@ -1,9 +1,11 @@
 package io.github.jwhyee.profanity.validator
 
 import io.github.jwhyee.profanity.dto.Profanity
+import io.github.jwhyee.profanity.helper.ProfanityTrie
 import io.github.jwhyee.profanity.policy.ProfanityFilterRegex
 import org.ahocorasick.trie.PayloadTrie
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.CopyOnWriteArraySet
 import java.util.concurrent.atomic.AtomicReference
 
 /**
@@ -11,12 +13,35 @@ import java.util.concurrent.atomic.AtomicReference
  * 실시간 사전 업데이트(Atomic Swap)와 변칙 우회 방어(Index Mapping)를 지원합니다.
  */
 class ProfanityValidator(
-    initialTrie: PayloadTrie<Profanity>,
-    private val allowWords: Set<String> = emptySet(),
+    customBannedWords: Collection<String> = emptyList(),
+    excludedWords: Collection<String> = emptyList(),
+    allowWords: Collection<String> = emptyList(),
 ) {
-    private val trieReference = AtomicReference(initialTrie)
+    // 실시간 업데이트를 위한 스레드 안전한 단어 목록 관리
+    private val _customBannedWords = CopyOnWriteArraySet(customBannedWords)
+    private val _excludedWords = CopyOnWriteArraySet(excludedWords)
+    private val _allowWords = CopyOnWriteArraySet(allowWords)
+
+    // Trie 및 캐시 관리 (Atomic Swap 적용)
+    private val trieReference = AtomicReference<PayloadTrie<Profanity>>()
     private val allowTrieCache = ConcurrentHashMap<Set<ProfanityFilterRegex>, PayloadTrie<String>>()
     private val defaultPolicies = setOf(ProfanityFilterRegex.NUMBERS, ProfanityFilterRegex.WHITESPACES)
+
+    /**
+     * 초기 Trie 빌드
+     */
+    init {
+        rebuildTrie()
+    }
+
+    /**
+     * 외부에서 빌드된 Trie를 주입받아 즉시 교체하는 보조 생성자입니다.
+     */
+    constructor(trie: PayloadTrie<Profanity>, allowWords: Set<String> = emptySet()) : this(
+        allowWords = allowWords
+    ) {
+        trieReference.set(trie)
+    }
 
     /**
      * 현재 사용 중인 [PayloadTrie] 인스턴스를 반환합니다.
@@ -26,9 +51,56 @@ class ProfanityValidator(
 
     /**
      * 새로운 비속어 사전으로 원자적 교체(Atomic Swap)를 수행합니다.
-     * @param newTrie 새롭게 빌드된 [PayloadTrie]
      */
     fun updateTrie(newTrie: PayloadTrie<Profanity>) {
+        trieReference.set(newTrie)
+    }
+
+    /**
+     * 금칙어를 실시간으로 추가합니다. 추가 후 사전이 자동으로 재빌드됩니다.
+     */
+    fun addBannedWords(vararg words: String) {
+        if (_customBannedWords.addAll(words.toList())) {
+            rebuildTrie()
+        }
+    }
+
+    /**
+     * 금칙어를 실시간으로 제거합니다. 제거 후 사전이 자동으로 재빌드됩니다.
+     */
+    fun removeBannedWords(vararg words: String) {
+        if (_customBannedWords.removeAll(words.toSet())) {
+            rebuildTrie()
+        }
+    }
+
+    /**
+     * 기본 금칙어 목록에서 제외할 단어를 추가합니다.
+     */
+    fun addExcludedWords(vararg words: String) {
+        if (_excludedWords.addAll(words.toList())) {
+            rebuildTrie()
+        }
+    }
+
+    /**
+     * 허용 단어(WhiteList)를 실시간으로 추가합니다.
+     */
+    fun addAllowedWords(vararg words: String) {
+        if (_allowWords.addAll(words.toList())) {
+            allowTrieCache.clear() // 허용 목록 변경 시 캐시 초기화
+        }
+    }
+
+    /**
+     * 내부 상태를 바탕으로 Trie를 다시 빌드하여 원자적으로 교체합니다. (CopyOnWrite 패턴)
+     */
+    @Synchronized
+    private fun rebuildTrie() {
+        val newTrie = ProfanityTrie.create(
+            customWords = _customBannedWords.toList(),
+            excludeWords = _excludedWords.toList()
+        )
         trieReference.set(newTrie)
     }
 
@@ -62,11 +134,6 @@ class ProfanityValidator(
 
     /**
      * 문장 내의 비속어를 마스킹 처리하여 반환합니다.
-     * 인덱스 매핑 테이블을 사용하여 원본 텍스트의 변칙 표현(공백, 숫자 포함)까지 정확히 찾아 마스킹합니다.
-     *
-     * @param sentence 마스킹할 원문
-     * @param maskChar 마스킹에 사용할 문자 (기본값: '*')
-     * @return 마스킹된 문자열
      */
     fun filter(sentence: String, maskChar: Char = '*'): String {
         if (sentence.isBlank()) return sentence
@@ -83,11 +150,9 @@ class ProfanityValidator(
         detectedBans.forEach { ban ->
             val isAllowed = detectedAllows.any { allow -> overlaps(ban.start, ban.end, allow.start, allow.end) }
             if (!isAllowed) {
-                // 매핑 테이블을 통해 원본 인덱스 시작과 끝을 복원
                 val originalStart = mapping.indexMap[ban.start]
                 val originalEnd = mapping.indexMap[ban.end]
-                
-                // 원본 텍스트의 해당 범위를 모두 마스킹 (사이의 공백/숫자 포함)
+
                 for (i in originalStart..originalEnd) {
                     resultChars[i] = maskChar
                 }
@@ -97,9 +162,6 @@ class ProfanityValidator(
         return String(resultChars)
     }
 
-    /**
-     * 전처리를 수행하면서 각 문자의 원본 인덱스를 추적하는 매핑 테이블을 생성합니다.
-     */
     private fun applyPoliciesWithMapping(text: String, policies: Set<ProfanityFilterRegex>): IndexMapping {
         if (policies.isEmpty()) {
             return IndexMapping(text, IntArray(text.length) { it })
@@ -123,8 +185,7 @@ class ProfanityValidator(
     private fun getAllowTrie(policies: Set<ProfanityFilterRegex>): PayloadTrie<String> {
         return allowTrieCache.computeIfAbsent(policies) { key ->
             val builder = PayloadTrie.builder<String>()
-            allowWords.forEach { word ->
-                // 허용 단어도 동일한 정책으로 전처리하여 등록
+            _allowWords.forEach { word ->
                 val combinedRegex = key.joinToString("|") { "(${it.regex})" }.toRegex()
                 val normalized = word.replace(combinedRegex, "")
                 if (normalized.isNotBlank()) builder.addKeyword(normalized, normalized)

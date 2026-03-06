@@ -29,16 +29,37 @@ class ProfanityValidatorTest : StringSpec({
     }
 
     "사전 업데이트 후 새로운 금칙어가 즉시 반영된다" {
-        val initialTrie = ProfanityTrie.create(customWords = listOf("바보"))
-        val validator = ProfanityValidator(initialTrie)
+        val validator = ProfanityValidator(customBannedWords = listOf("바보"))
         validator.filter("안녕 바보") shouldBe "안녕 **"
 
-        // when: '천재'를 금칙어로 추가하여 업데이트 (Atomic Swap)
-        val newTrie = ProfanityTrie.create(customWords = listOf("바보", "천재"))
-        validator.updateTrie(newTrie)
+        // 실시간 단어 추가
+        validator.addBannedWords("천재")
 
         // then
         validator.filter("안녕 천재") shouldBe "안녕 **"
+    }
+
+    "금칙어 제거 시 즉시 반영되어 더 이상 필터링되지 않는다" {
+        val validator = ProfanityValidator(customBannedWords = listOf("바보"))
+        validator.filter("안녕 바보") shouldBe "안녕 **"
+
+        // 실시간 단어 제거
+        validator.removeBannedWords("바보")
+
+        // then
+        validator.filter("안녕 바보") shouldBe "안녕 바보"
+    }
+
+    "허용 단어 추가 시 즉시 반영되어 필터링에서 제외된다" {
+        val validator = ProfanityValidator(customBannedWords = listOf("시발"))
+        // "시발"은 2글자이므로 "**"로 마스킹됨
+        validator.filter("공부의 시발점") shouldBe "공부의 **점"
+
+        // 실시간 허용 단어 추가
+        validator.addAllowedWords("시발점")
+
+        // then
+        validator.filter("공부의 시발점") shouldBe "공부의 시발점"
     }
 
     "비속어 탐지 시 예외를 발생시킨다" {
