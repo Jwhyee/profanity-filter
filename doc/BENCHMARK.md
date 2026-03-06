@@ -22,6 +22,8 @@ The benchmark measures the execution time of four different approaches on a gene
     - Uses Aho-Corasick algorithm (O(n)).
     - **Includes** normalization (removing numbers/spaces).
     - **Includes** whitelist checking logic.
+    - **Includes** Index Mapping (precise restoration of original character ranges).
+    - **Includes** Atomic Swap (lock-free real-time dictionary updates).
     - **Includes** exception generation overhead (on detection).
 
 2.  **Simple Regex**:
