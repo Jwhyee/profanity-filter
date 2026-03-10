@@ -2,6 +2,8 @@
 # 라이브러리 및 외부 의존성 버전 관리
 profanity-filter = "1.0.1"
 ahocorasick = "0.6.3"
+jmhVersion = "1.37"
+jmh-plugin = "0.7.2"
 kotlin = "1.9.20"
 kotest = "5.8.0"
 
@@ -11,7 +13,10 @@ ahocorasick = { group = "org.ahocorasick", name = "ahocorasick", version.ref = "
 # 코테스트
 kotest-runner-junit5 = { group = "io.kotest", name = "kotest-runner-junit5", version.ref = "kotest" }
 kotest-assertions-core = { group = "io.kotest", name = "kotest-assertions-core", version.ref = "kotest" }
+jmh-core = { group = "org.openjdk.jmh", name = "jmh-core", version.ref = "jmhVersion" }
+jmh-generator-annprocess = { group = "org.openjdk.jmh", name = "jmh-generator-annprocess", version.ref = "jmhVersion" }
 
 [plugins]
 # 코틀린 플러그인
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+jmh = { id = "me.champeau.jmh", version.ref = "jmh-plugin" }
