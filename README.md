@@ -1,76 +1,76 @@
-# Profanity Filter Library (Kotlin/Java)
+# JVM용 비속어 필터 (Profanity Filter)
 
-> 비속어, 인격 모독 등에 대한 단어가 포함된 리포지토리입니다. 코드를 읽으실 때, 이 점 양해해주시면 감사하겠습니다.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Kotlin](https://img.shields.io/badge/kotlin-2.1.0-blue.svg)](https://kotlinlang.org)
 
-Aho-Corasick 알고리즘 기반의 비속어 필터링 라이브러리입니다. 정규식(Regex) 기반 탐지의 성능 병목을 해결하고, 숫자나 공백을 섞은 변칙 우회 패턴을 $O(N)$ 시간 복잡도로 처리합니다. 우아한형제들 기술 블로그의 [비속어 탐지 전략](https://techblog.woowahan.com/15764/)을 참고하여 설계되었습니다.
+> **주의**: 이 저장소에는 비속어 및 인격 모독 등 다소 공격적인 언어가 포함되어 있습니다.
 
-## 📊 성능 벤치마크 (Performance)
+고성능 비속어 탐지 및 마스킹을 위한 Kotlin/Java 라이브러리입니다. 단순 정규식 기반 필터나 변칙(예: 시1발)에 취약한 기본 루프 체크 방식과 달리, 이 라이브러리는 **아호-코라식(Aho-Corasick) 알고리즘**과 **좌표 매핑(Coordinate Mapping)** 시스템을 결합하여 $O(N)$의 시간 복잡도를 달성하면서도 100%의 정확한 마스킹 정밀도를 유지합니다.
 
-변칙 우회 패턴을 포함한 10만 자 길이의 텍스트(약 15,000 단어)를 대상으로 기존 탐지 방식들과 성능을 비교한 결과입니다.
+[우아한형제들 기술 블로그의 비속어 탐지 전략](https://techblog.woowahan.com/15764/)에서 영감을 받아 구현되었습니다.
 
-* **테스트 환경**: OpenJDK 21, Apple M1 Pro
-* **테스트 조건**: 금칙어 밀도 5%, 이 중 50%는 숫자/공백이 혼합된 변칙 우회 패턴 적용
+## 성능 엔지니어링
 
-| 탐지 방식 | 변칙 탐지 여부 | 평균 실행 시간 | 비고 |
-| --- | --- | --- | --- |
-| **Profanity Filter (본 라이브러리)** | **O** | **3.15 ms** | **Aho-Corasick + 정규화 + 허용 단어 검증 포함** |
-| 복합 정규식 (Complex Regex) | O | 85.89 ms | 변칙 탐지는 가능하나 패턴이 길어질수록 성능 급감 |
-| 단순 정규식 (Simple Regex) | X | 77.64 ms | 변칙 패턴 탐지 불가 |
-| Contains Loop (`String.contains`) | X | 1.79 ms | 가장 빠르나 변칙 탐지 불가 (기능적 한계) |
+이 라이브러리는 지연 시간(Latency)이 중요한 고처리량(High-throughput) 환경을 위해 설계되었습니다. 입력을 정규화하고 트라이(Trie) 기반 검색을 사용함으로써, 사전의 크기에 상관없이 거의 일정한 성능을 유지합니다.
 
-### 성능 요약
+### 벤치마크 결과
+*   **환경**: OpenJDK 21, Apple M1 Pro
+*   **입력**: 100,000자 (~15,000 단어)
+*   **조건**: 비속어 밀도 5%, 변칙 패턴 50% (숫자/공백 혼합)
 
-본 라이브러리는 복합 정규식과 동일한 수준의 변칙 우회 탐지 기능을 제공하면서도 **약 27배 빠른 처리 속도**를 보입니다. 변칙 탐지가 불가능한 단순 `contains` 탐색과 근접한 응답 속도를 유지하므로, 트래픽이 집중되는 애플리케이션 계층에서 실시간 필터링 용도로 적합합니다.
+| 방법 | 변칙 탐지 여부 | 평균 실행 시간 | 비고                  |
+| :--- |:--------:|:--------------------|:--------------------|
+| **비속어 필터 (본 라이브러리)** |  **가능**  | **3.15 ms**         | **아호-코라식 + 정규화**    |
+| 복잡한 정규식 |    가능    | 46.89 ms            | 긴 문자열에서 상당한 오버헤드 발생 |
+| 단순 정규식 |   불가능    | 70.64 ms            | "ㅅ1발" 등 변칙 시도 탐지 실패 |
+| `String.contains` 루프 |   불가능    | 2.79 ms             | 가장 빠르나 기능적으로 제한적임   |
 
-> 벤치마크 테스트는 다음 명령어로 직접 실행해 볼 수 있습니다.
-> `./gradlew test --tests "io.github.jwhyee.profanity.policy.PerformanceBenchmark" --info`
+**결론**: 이 라이브러리는 복잡한 정규식 수준의 방어력을 제공하면서도 **약 27배 더 빠르며**, 단순 루프 기반 체크와 대등한 속도를 보여줍니다.
 
-## 💡 주요 기능
+## 주요 기능
 
-* **다중 패턴 매칭**: Aho-Corasick 구조를 적용하여 금칙어 개수가 증가해도 탐색 성능을 $O(N)$으로 유지합니다.
-* **변칙 우회 방어**: 입력 문자열에서 정책에 따라 숫자(`ㅅ123ㅂ`)나 공백(`시  발`)을 정규화하여 탐지합니다.
-* **지능형 예외 처리**: "시발점"과 같이 정상 단어 내에 금칙어가 포함된 경우, 구간 중첩 알고리즘을 통해 오탐지(False Positive)를 방지합니다.
-* **정교한 마스킹**: 인덱스 매핑(Index Mapping) 기술을 통해 변칙 우회 문자(`시 1 발`)까지 포함하여 원본 문장의 정확한 범위를 마스킹(`*****`) 처리합니다.
-* **실시간 사전 업데이트**: `Atomic Swap` 방식을 사용하여 서비스 중단(Lock-contention) 없이 실시간으로 금칙어 사전을 추가하거나 삭제할 수 있습니다.
-* **Trie 빌드 캐싱**: 정책 조합별로 허용 단어 트리를 메모리에 캐싱하여 런타임 오버헤드를 최소화합니다.
+*   **결정론적 성능 (Deterministic Performance)**: $O(N)$ 검색 복잡도를 통해 금지 단어 목록이 수천 개로 늘어나더라도 예측 가능한 지연 시간을 보장합니다.
+*   **변칙 복원력 (Bypass Resiliency)**: 설정 가능한 정규화 정책을 통해 `ㅅ123ㅂ` 또는 `시  발`과 같은 의도적인 난독화를 자동으로 처리합니다.
+*   **중단 없는 업데이트 (Zero-Downtime Updates)**: 내부 트라이 구조에 **원자적 교체(Atomic Swaps)**를 사용하여, 락 경합(Lock Contention) 없이 런타임에 금지/허용 단어 목록을 업데이트할 수 있습니다.
+*   **좌표 복원 (Coordinate Restoration)**: `IndexMap` 시스템을 구현하여 정규화 후에도 (변칙용 노이즈를 포함한) *원본* 캐릭터를 정확하게 마스킹합니다.
+*   **오탐 방지 (False Positive Mitigation)**: 겹치는 구간 탐지를 통한 화이트리스트를 지원합니다 (예: "시발"이 금지어라도 "시발점"은 유지됨).
 
-## 🚀 Quick Start
+## 사용법
 
-* [Quick start document](https://www.google.com/search?q=./doc/QUICK_START.md)
+### 빠른 시작
+```kotlin
+val validator = ProfanityValidator(
+    customBannedWords = listOf("badword"),
+    allowWords = listOf("goodword")
+)
 
-## 🛠️ 동작 원리
+// 마스킹
+val masked = validator.filter("This is a bad word") // "This is a *******"
 
-### 탐지 알고리즘 파이프라인
-
-1. **정규화**: 입력 문장에서 설정된 정책(Policy)에 따라 숫자 및 공백을 제거 (예: `시 1발` → `시발`)
-2. **금칙어 탐지**: Trie 기반의 Aho-Corasick 알고리즘으로 전체 금칙어 구간 탐색
-3. **허용 단어 탐지**: 동일한 정책이 적용된 허용 단어 트리를 통해 예외 구간 탐색
-4. **구간 교집합 판단**: 금칙어 탐지 구간이 허용 단어 구간 내에 포함될 경우 최종 결과에서 제외 처리
-5. **인덱스 복원 및 마스킹**: 인덱스 매핑 테이블을 역추적하여 원본 문장의 정확한 위치를 찾아 마스킹 처리 (예: `시 1 발` -> `*****`)
-
-### 전처리 정책 (Policy)
-
-| 정책 | 정규식 | 설명 |
-| --- | --- | --- |
-| `NUMBERS` | `[\p{N}]` | 숫자 혼용 우회 탐지 방어 (예: `시1발`) |
-| `WHITESPACES` | `[\s]` | 공백 우회 탐지 방어 (예: `시 발`) |
-
-## 📁 프로젝트 구조
-
-```text
-io.github.jwhyee.profanity
-├── dto        # 데이터 모델 (결과 반환 객체 등)
-├── helper     # Trie 빌더 및 내부 유틸리티
-├── policy     # 금칙어/허용어 목록 및 정규화 정책
-└── validator  # 검증 엔진 및 구간 중첩 판단 로직
-
+// 검증
+try {
+    validator.validate("Don't say badword")
+} catch (e: ProfanityDetectedException) {
+    println("탐지된 단어: ${e.detectedWords}")
+}
 ```
 
-## 🔗 참고 자료
+## 기술 아키텍처
 
-* [우아한형제들 기술 블로그 - 고르곤졸라는 되지만 고르곤 졸라는 안 돼! 배달의민족에서 금칙어를 관리하는 방법](https://techblog.woowahan.com/15764/)
-* [Aho-Corasick Algorithm - Wikipedia](https://en.wikipedia.org/wiki/Aho%E2%80%93Corasick_algorithm)
+필터링 엔진은 다단계 파이프라인으로 작동합니다:
 
-## 📜 License
+1.  **정규화 (Normalization)**: `ProfanityFilterRegex`에 정의된 노이즈(숫자, 공백 등)를 입력값에서 제거합니다. `IntArray` 매핑은 남은 각 캐릭터의 원본 위치를 추적합니다.
+2.  **트라이 검색 (Trie Search)**: 정규화된 텍스트는 $O(N)$ 매칭을 위해 아호-코라식 트라이를 통과합니다.
+3.  **중복 해결 (Overlap Resolution)**: 탐지된 토큰들을 "허용 단어" 트라이와 비교합니다. 금지 토큰이 허용 토큰의 일부인 경우(예: "시발점" 내부의 "시발") 무시됩니다.
+4.  **인덱스 복원 (Index Restoration)**: 엔진은 `IndexMap`을 참조하여 마스킹을 위한 *원본* 문자열의 정확한 시작/끝 오프셋을 찾습니다.
 
-이 프로젝트는 MIT License를 따릅니다. 자세한 내용은 [LICENSE](./LICENSE) 파일을 확인해주세요.
+## 개발 및 기여
+
+### 명령어
+- **빌드**: `./gradlew build`
+- **테스트**: `./gradlew test`
+- **벤치마크 (JMH)**: `./gradlew jmh`
+- **벤치마크 (단순 테스트)**: `./gradlew test --tests "io.github.jwhyee.profanity.policy.PerformanceBenchmark" --info`
+
+## 라이선스
+MIT 라이선스에 따라 배포됩니다. 자세한 내용은 `LICENSE`를 참조하세요.

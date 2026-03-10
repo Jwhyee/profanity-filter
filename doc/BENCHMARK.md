@@ -53,9 +53,9 @@ Benchmark Configuration:
 --------------------------------------------------
 Results (Average per iteration):
 1. Library (Full Feature):       3.15 ms
-2. Simple Regex (No Variants):  77.64 ms
-3. Contains Loop (No Variants):  1.79 ms
-4. Complex Regex (With Variants): 85.89 ms
+2. Simple Regex (No Variants):  70.64 ms
+3. Contains Loop (No Variants):  2.79 ms
+4. Complex Regex (With Variants): 46.89 ms
 --------------------------------------------------
 ```
 
@@ -73,7 +73,15 @@ The `profanity-filter` library provides **Variant Detection** (like Complex Rege
 
 ## How to Run
 
-Run the benchmark test using Gradle:
+### JMH (Java Microbenchmark Harness)
+For precise, industry-standard results, use the JMH task:
+
+```bash
+./gradlew jmh
+```
+
+### Simple Benchmark Test
+For a quick, non-standard measurement:
 
 ```bash
 ./gradlew test --tests "io.github.jwhyee.profanity.policy.PerformanceBenchmark" --info
