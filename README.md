@@ -44,25 +44,7 @@
 
 ## 사용 방법
 
-```kotlin
-// 1. Validator 인스턴스 생성 (설정 시 트라이가 빌드됩니다)
-val validator = ProfanityValidator(
-    customBannedWords = listOf("badword"),
-    allowWords = listOf("goodword")
-)
-
-// 2. 마스킹 처리
-val maskedText = validator.filter("This is a b a d w o r d") 
-// 결과: "This is a *************" (공백을 포함하여 정확히 마스킹됨)
-
-// 3. 단순 검증 (예외 발생)
-try {
-    validator.validate("Don't say badword")
-} catch (e: ProfanityDetectedException) {
-    println("탐지된 비속어 목록: ${e.detectedWords}")
-}
-
-```
+[QUICK START 문서](https://github.com/Jwhyee/profanity-filter/blob/master/doc/QUICK_START.md)를 확인해주세요.
 
 ## 개발 및 기여
 
